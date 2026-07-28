@@ -1,0 +1,4 @@
+[submodule "usbipdcpp"]
+	path = usbipdcpp
+	url = https://github.com/ga2mer/usbipdcpp
+	branch = uac1
