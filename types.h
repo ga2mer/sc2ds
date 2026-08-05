@@ -1,3 +1,24 @@
+#pragma once
+#include "DualsenseHandler.h"
+#include <cstdint>
+
+#define VALVE_USB_VID 0x28DE
+
+enum ValveControllerPID {
+  TRITON_PID = 0x1302,
+  PUCK_PID = 0x1304,
+};
+
+enum ETritonReportIDTypes {
+  ID_TRITON_CONTROLLER_STATE = 0x42,
+  ID_TRITON_BATTERY_STATUS = 0x43,
+  ID_TRITON_CONTROLLER_STATE_BLE = 0x45,
+  ID_TRITON_WIRELESS_STATUS_X = 0x46,
+  ID_TRITON_CONTROLLER_STATE_TIMESTAMP = 0x47,
+
+  ID_TRITON_WIRELESS_STATUS = 0x79,
+};
+
 struct MsgHapticRumble {
   uint8_t report_id;
   uint8_t type;
@@ -50,6 +71,51 @@ struct TritonMTUNoQuat_t {
   short sRightPadY;
   unsigned short unPressureRight;
   TritonMTUIMUNoQuat_t imu;
+} __attribute__((packed));
+
+enum EChargeState {
+  k_EChargeStateReset,
+  k_EChargeStateDischarging,
+  k_EChargeStateCharging,
+  k_EChargeStateSrcValidate,
+  k_EChargeStateChargingDone,
+};
+
+constexpr usbipdcpp::DualsenseHandler::PowerState TritonToDualsensePowerState(EChargeState state) {
+  switch (state) {
+  case k_EChargeStateDischarging:
+    return usbipdcpp::DualsenseHandler::PowerState::Discharging;
+
+  case k_EChargeStateCharging:
+    return usbipdcpp::DualsenseHandler::PowerState::Charging;
+
+  case k_EChargeStateChargingDone:
+    return usbipdcpp::DualsenseHandler::PowerState::Complete;
+
+  case k_EChargeStateReset:
+  case k_EChargeStateSrcValidate:
+  default:
+    return usbipdcpp::DualsenseHandler::PowerState::ChargingError;
+  }
+}
+
+inline uint8_t RoundPowerLevel(uint8_t powerLevel) {
+  if (!powerLevel)
+    return 100;
+  if (powerLevel > 0 && powerLevel <= 10)
+    return 1;
+  return (powerLevel + 5) / 10;
+}
+
+struct TritonBatteryStatus_t {
+  unsigned char ucChargeState; // EChargeState
+  unsigned char ucBatteryLevel;
+  unsigned short sBatteryVoltage;
+  unsigned short sSystemVoltage;
+  unsigned short sInputVoltage;
+  unsigned short sCurrent;
+  unsigned short sInputCurrent;
+  unsigned short sTemperature;
 } __attribute__((packed));
 
 typedef enum {

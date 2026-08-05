@@ -49,13 +49,12 @@ public:
     char UpdateImageInfo;
     char UpdateUnk;
     ////
-    uint32_t
-        FwVersion1; // AKA SblFwVersion
-                    // 0xAABBCCCC AA.BB.CCCC
-                    // Ignored for FwType 0
-                    // HardwareVersion used for FwType 1
-                    // Unknown behavior if HardwareVersion < 0.1.38 for FwType 2
-                    // & 3 If HardwareVersion >= 0.1.38 for FwType 2 & 3
+    uint32_t FwVersion1; // AKA SblFwVersion
+                         // 0xAABBCCCC AA.BB.CCCC
+                         // Ignored for FwType 0
+                         // HardwareVersion used for FwType 1
+                         // Unknown behavior if HardwareVersion < 0.1.38 for FwType 2
+                         // & 3 If HardwareVersion >= 0.1.38 for FwType 2 & 3
     uint32_t FwVersion2; // AKA VenomFwVersion
     uint32_t FwVersion3; // AKA SpiderDspFwVersion AKA BettyFwVer
                          // May be Memory Control Unit for Non Volatile Storage
@@ -96,17 +95,7 @@ public:
     uint8_t CRC[4]; // CRC
   } __attribute__((packed));
 
-  enum Direction : uint8_t {
-    North = 0,
-    NorthEast,
-    East,
-    SouthEast,
-    South,
-    SouthWest,
-    West,
-    NorthWest,
-    None = 8
-  };
+  enum Direction : uint8_t { North = 0, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest, None = 8 };
 
   enum PowerState : uint8_t {
     Discharging = 0x00,         // Use PowerPercent
@@ -129,16 +118,7 @@ public:
     // NoAction7 = 7
   };
 
-  enum LightBrightness : uint8_t {
-    Bright = 0,
-    Mid,
-    Dim,
-    NoAction3,
-    NoAction4,
-    NoAction5,
-    NoAction6,
-    NoAction7 = 7
-  };
+  enum LightBrightness : uint8_t { Bright = 0, Mid, Dim, NoAction3, NoAction4, NoAction5, NoAction6, NoAction7 = 7 };
 
   enum LightFadeAnimation : uint8_t {
     Nothing = 0,
@@ -188,8 +168,8 @@ public:
     /* 9.6*/ uint8_t ButtonLeftPaddle : 1;    // DualSense Edge
     /* 9.7*/ uint8_t ButtonRightPaddle : 1;   // DualSense Edge
     /*10  */ uint8_t UNK2;                    // appears unused
-    /*11  */ uint32_t UNK_COUNTER; // Linux driver calls this reserved, tools
-                                   // leak calls the 2 high bytes "random"
+    /*11  */ uint32_t UNK_COUNTER;            // Linux driver calls this reserved, tools
+                                              // leak calls the 2 high bytes "random"
     /*15  */ int16_t AngularVelocityX;
     /*17  */ int16_t AngularVelocityZ;
     /*19  */ int16_t AngularVelocityY;
@@ -199,25 +179,23 @@ public:
     /*27  */ uint32_t SensorTimestamp;
     /*31  */ int8_t Temperature; // reserved2 in Linux driver
     /*32  */ TouchData touchData;
-    /*41.0*/ uint8_t TriggerRightStopLocation
-        : 4; // trigger stop can be a range from 0 to 9 (F/9.0 for Apple
-    // interface)
+    /*41.0*/ uint8_t TriggerRightStopLocation : 4; // trigger stop can be a range from 0 to 9 (F/9.0 for Apple
+                                                   // interface)
     /*41.4*/ uint8_t TriggerRightStatus : 4;
     /*42.0*/ uint8_t TriggerLeftStopLocation : 4;
-    /*42.4*/ uint8_t TriggerLeftStatus : 4; // 0 feedbackNoLoad
-                                            // 1 feedbackLoadApplied
-                                            // 0 weaponReady
-                                            // 1 weaponFiring
-                                            // 2 weaponFired
-                                            // 0 vibrationNotVibrating
-                                            // 1 vibrationIsVibrating
-    /*43  */ uint32_t HostTimestamp;        // mirrors data from report write
-    /*47.0*/ uint8_t TriggerRightEffect
-        : 4; // Active trigger effect, previously we thought this was status max
-    /*47.4*/ uint8_t TriggerLeftEffect : 4; // 0 for reset and all other effects
-                                            // 1 for feedback effect
-                                            // 2 for weapon effect
-                                            // 3 for vibration
+    /*42.4*/ uint8_t TriggerLeftStatus : 4;  // 0 feedbackNoLoad
+                                             // 1 feedbackLoadApplied
+                                             // 0 weaponReady
+                                             // 1 weaponFiring
+                                             // 2 weaponFired
+                                             // 0 vibrationNotVibrating
+                                             // 1 vibrationIsVibrating
+    /*43  */ uint32_t HostTimestamp;         // mirrors data from report write
+    /*47.0*/ uint8_t TriggerRightEffect : 4; // Active trigger effect, previously we thought this was status max
+    /*47.4*/ uint8_t TriggerLeftEffect : 4;  // 0 for reset and all other effects
+                                             // 1 for feedback effect
+                                             // 2 for weapon effect
+                                             // 3 for vibration
     /*48  */ uint32_t DeviceTimeStamp;
     /*52.0*/ uint8_t PowerPercent : 4; // 0x00-0x0A
     /*52.4*/ PowerState powerState : 4;
@@ -225,72 +203,60 @@ public:
     /*53.1*/ uint8_t PluggedMic : 1;
     /*53.2*/ uint8_t MicMuted : 1; // Mic muted by powersave/mute command
     /*53.3*/ uint8_t PluggedUsbData : 1;
-    /*53.4*/ uint8_t PluggedUsbPower
-        : 1; // appears that this cannot be 1 if PluggedUsbData is 1
-    /*53.5*/ uint8_t UsbPowerOnBT
-        : 1; // appears this is only 1 if BT connected and USB powered
+    /*53.4*/ uint8_t PluggedUsbPower : 1; // appears that this cannot be 1 if PluggedUsbData is 1
+    /*53.5*/ uint8_t UsbPowerOnBT : 1;    // appears this is only 1 if BT connected and USB powered
     /*53.5*/ uint8_t DockDetect : 1;
     /*53.5*/ uint8_t PluggedUnk : 1;
-    /*54.0*/ uint8_t PluggedExternalMic
-        : 1; // Is external mic active (automatic in mic auto mode)
-    /*54.1*/ uint8_t HapticLowPassFilter
-        : 1; // Is the Haptic Low-Pass-Filter active?
+    /*54.0*/ uint8_t PluggedExternalMic : 1;  // Is external mic active (automatic in mic auto mode)
+    /*54.1*/ uint8_t HapticLowPassFilter : 1; // Is the Haptic Low-Pass-Filter active?
     /*54.2*/ uint8_t PluggedUnk3 : 6;
     /*55  */ uint8_t AesCmac[8];
   } __attribute__((packed));
 
   struct USBSetStateData { // 47
     /*    */               // Report Set Flags
-    /*    */ // These flags are used to indicate what contents from this report
+    /*    */               // These flags are used to indicate what contents from this report
              // should be processed
-    /* 0.0*/ uint8_t EnableRumbleEmulation
-        : 1;                                  // Suggest halving rumble strength
-    /* 0.1*/ uint8_t UseRumbleNotHaptics : 1; //
-                                              /*    */
-    /* 0.2*/ uint8_t AllowRightTriggerFFB : 1; // Enable setting RightTriggerFFB
-    /* 0.3*/ uint8_t AllowLeftTriggerFFB : 1;  // Enable setting LeftTriggerFFB
-                                               /*    */
-    /* 0.4*/ uint8_t AllowHeadphoneVolume
-        : 1;                                 // Enable setting VolumeHeadphones
-    /* 0.5*/ uint8_t AllowSpeakerVolume : 1; // Enable setting VolumeSpeaker
-    /* 0.6*/ uint8_t AllowMicVolume : 1;     // Enable setting VolumeMic
-                                             /*    */
-    /* 0.7*/ uint8_t AllowAudioControl
-        : 1;                             // Enable setting AudioControl section
-    /* 1.0*/ uint8_t AllowMuteLight : 1; // Enable setting MuteLightMode
-    /* 1.1*/ uint8_t AllowAudioMute : 1; // Enable setting MuteControl section
-                                         /*    */
-    /* 1.2*/ uint8_t AllowLedColor : 1;  // Enable RGB LED section
-                                         /*    */
-    /* 1.3*/ uint8_t ResetLights
-        : 1; // Release the LEDs from Wireless firmware control
-    /*    */ // When in wireless mode this must be signaled to control LEDs
-    /*    */ // This cannot be applied during the BT pair animation.
-    /*    */ // SDL2 waits until the SensorTimestamp value is >= 10200000
-    /*    */ // before pulsing this bit once.
-    /*    */
-    /* 1.4*/ uint8_t AllowPlayerIndicators
-        : 1; // Enable setting PlayerIndicators section
+    /* 0.0*/ uint8_t EnableRumbleEmulation : 1;    // Suggest halving rumble strength
+    /* 0.1*/ uint8_t UseRumbleNotHaptics : 1;      //
+                                                   /*    */
+    /* 0.2*/ uint8_t AllowRightTriggerFFB : 1;     // Enable setting RightTriggerFFB
+    /* 0.3*/ uint8_t AllowLeftTriggerFFB : 1;      // Enable setting LeftTriggerFFB
+                                                   /*    */
+    /* 0.4*/ uint8_t AllowHeadphoneVolume : 1;     // Enable setting VolumeHeadphones
+    /* 0.5*/ uint8_t AllowSpeakerVolume : 1;       // Enable setting VolumeSpeaker
+    /* 0.6*/ uint8_t AllowMicVolume : 1;           // Enable setting VolumeMic
+                                                   /*    */
+    /* 0.7*/ uint8_t AllowAudioControl : 1;        // Enable setting AudioControl section
+    /* 1.0*/ uint8_t AllowMuteLight : 1;           // Enable setting MuteLightMode
+    /* 1.1*/ uint8_t AllowAudioMute : 1;           // Enable setting MuteControl section
+                                                   /*    */
+    /* 1.2*/ uint8_t AllowLedColor : 1;            // Enable RGB LED section
+                                                   /*    */
+    /* 1.3*/ uint8_t ResetLights : 1;              // Release the LEDs from Wireless firmware control
+    /*    */                                       // When in wireless mode this must be signaled to control LEDs
+    /*    */                                       // This cannot be applied during the BT pair animation.
+    /*    */                                       // SDL2 waits until the SensorTimestamp value is >= 10200000
+    /*    */                                       // before pulsing this bit once.
+                                                   /*    */
+    /* 1.4*/ uint8_t AllowPlayerIndicators : 1;    // Enable setting PlayerIndicators section
     /* 1.5*/ uint8_t AllowHapticLowPassFilter : 1; // Enable HapticLowPassFilter
-    /* 1.6*/ uint8_t AllowMotorPowerLevel
-        : 1; // MotorPowerLevel reductions for trigger/haptic
-    /* 1.7*/ uint8_t AllowAudioControl2
-        : 1; // Enable setting AudioControl2 section
-    /*    */
-    /* 2  */ uint8_t RumbleEmulationRight; // emulates the light weight
-    /* 3  */ uint8_t RumbleEmulationLeft;  // emulated the heavy weight
-                                           /*    */
-    /* 4  */ uint8_t VolumeHeadphones;     // max 0x7f
-    /* 5  */ uint8_t
-        VolumeSpeaker;          // PS5 appears to only use the range 0x3d-0x64
-    /* 6  */ uint8_t VolumeMic; // not linear, seems to max at 64, 0 is fully
-                                // muted only in chat mode
-                                /*    */
-    /*    */                    // AudioControl
-    /* 7.0*/ uint8_t MicSelect : 2; // 0 Auto
-    /*    */                        // 1 Internal Only
-    /*    */                        // 2 External Only
-    /*    */ // 3 Unclear, sets external mic flag but might use internal mic, do
+    /* 1.6*/ uint8_t AllowMotorPowerLevel : 1;     // MotorPowerLevel reductions for trigger/haptic
+    /* 1.7*/ uint8_t AllowAudioControl2 : 1;       // Enable setting AudioControl2 section
+                                                   /*    */
+    /* 2  */ uint8_t RumbleEmulationRight;         // emulates the light weight
+    /* 3  */ uint8_t RumbleEmulationLeft;          // emulated the heavy weight
+                                                   /*    */
+    /* 4  */ uint8_t VolumeHeadphones;             // max 0x7f
+    /* 5  */ uint8_t VolumeSpeaker;                // PS5 appears to only use the range 0x3d-0x64
+    /* 6  */ uint8_t VolumeMic;                    // not linear, seems to max at 64, 0 is fully
+                                                   // muted only in chat mode
+                                                   /*    */
+    /*    */                                       // AudioControl
+    /* 7.0*/ uint8_t MicSelect : 2;                // 0 Auto
+    /*    */                                       // 1 Internal Only
+    /*    */                                       // 2 External Only
+    /*    */                                       // 3 Unclear, sets external mic flag but might use internal mic, do
              // test
     /* 7.2*/ uint8_t EchoCancelEnable : 1;
     /* 7.3*/ uint8_t NoiseCancelEnable : 1;
@@ -317,26 +283,23 @@ public:
                                      /*    */
     /*10  */ uint8_t RightTriggerFFB[11];
     /*21  */ uint8_t LeftTriggerFFB[11];
-    /*32  */ uint32_t HostTimestamp;                // mirrored into report read
-                                                    /*    */
-    /*    */                                        // MotorPowerLevel
-    /*36.0*/ uint8_t RumbleMotorPowerReduction : 4; // 0x0-0xF
-    /*36.4*/ uint8_t TriggerMotorPowerReduction : 4; // 0x0-0xA
-                                                     /*    */
-    /*    */                                         // AudioControl2
-    /*37.0*/ uint8_t SpeakerCompPreGain : 3; // additional speaker volume boost
-    /*37.3*/ uint8_t BeamformingEnable
-        : 1; // Probably for MIC given there's 2, might be more bits, can't find
-    // what it does
-    /*37.4*/ uint8_t UnkAudioControl2
-        : 4; // some of these bits might apply to the above
-    /*    */
-    /*38.0*/ uint8_t AllowLightBrightnessChange : 1;   // LED_BRIHTNESS_CONTROL
-    /*38.1*/ uint8_t AllowColorLightFadeAnimation : 1; // LIGHTBAR_SETUP_CONTROL
-    /*38.2*/ uint8_t EnableImprovedRumbleEmulation
-        : 1; // Use instead of EnableRumbleEmulation
-    // requires FW >= 0x0224
-    // No need to halve rumble strength
+    /*32  */ uint32_t HostTimestamp;                    // mirrored into report read
+                                                        /*    */
+    /*    */                                            // MotorPowerLevel
+    /*36.0*/ uint8_t RumbleMotorPowerReduction : 4;     // 0x0-0xF
+    /*36.4*/ uint8_t TriggerMotorPowerReduction : 4;    // 0x0-0xA
+                                                        /*    */
+    /*    */                                            // AudioControl2
+    /*37.0*/ uint8_t SpeakerCompPreGain : 3;            // additional speaker volume boost
+    /*37.3*/ uint8_t BeamformingEnable : 1;             // Probably for MIC given there's 2, might be more bits, can't find
+                                                        // what it does
+    /*37.4*/ uint8_t UnkAudioControl2 : 4;              // some of these bits might apply to the above
+                                                        /*    */
+    /*38.0*/ uint8_t AllowLightBrightnessChange : 1;    // LED_BRIHTNESS_CONTROL
+    /*38.1*/ uint8_t AllowColorLightFadeAnimation : 1;  // LIGHTBAR_SETUP_CONTROL
+    /*38.2*/ uint8_t EnableImprovedRumbleEmulation : 1; // Use instead of EnableRumbleEmulation
+                                                        // requires FW >= 0x0224
+                                                        // No need to halve rumble strength
     /*38.3*/ uint8_t UseRumbleNotHaptics2 : 1;
     /*38.4*/ uint8_t UNKBITC : 4; // unused
                                   /*    */
@@ -349,21 +312,21 @@ public:
     /*41  */ LightFadeAnimation lightFadeAnimation;
     /*42  */ LightBrightness lightBrightness;
     /*    */
-    /*    */ // PlayerIndicators
-    /*    */ // These bits control the white LEDs under the touch pad.
-    /*    */ // Note the reduction in functionality for later revisions.
-    /*    */ // Generation 0x03 - Full Functionality
-    /*    */ // Generation 0x04 - Mirrored Only
-    /*    */ // Suggested detection: (HardwareInfo & 0x00FFFF00) == 0X00000400
-    /*    */ //
-    /*    */ // Layout used by PS5:
-    /*    */ // 0x04 - -x- -  Player 1
-    /*    */ // 0x06 - x-x -  Player 2
-    /*    */ // 0x15 x -x- x  Player 3
-    /*    */ // 0x1B x x-x x  Player 4
-    /*    */ // 0x1F x xxx x  Player 5* (Unconfirmed)
-    /*    */ //
-    /*    */ //                        // HW 0x03 // HW 0x04
+    /*    */                              // PlayerIndicators
+    /*    */                              // These bits control the white LEDs under the touch pad.
+    /*    */                              // Note the reduction in functionality for later revisions.
+    /*    */                              // Generation 0x03 - Full Functionality
+    /*    */                              // Generation 0x04 - Mirrored Only
+    /*    */                              // Suggested detection: (HardwareInfo & 0x00FFFF00) == 0X00000400
+    /*    */                              //
+    /*    */                              // Layout used by PS5:
+    /*    */                              // 0x04 - -x- -  Player 1
+    /*    */                              // 0x06 - x-x -  Player 2
+    /*    */                              // 0x15 x -x- x  Player 3
+    /*    */                              // 0x1B x x-x x  Player 4
+    /*    */                              // 0x1F x xxx x  Player 5* (Unconfirmed)
+    /*    */                              //
+    /*    */                              //                        // HW 0x03 // HW 0x04
     /*43.0*/ uint8_t PlayerLight1 : 1;    // x --- - // x --- x
     /*43.1*/ uint8_t PlayerLight2 : 1;    // - x-- - // - x-x -
     /*43.2*/ uint8_t PlayerLight3 : 1;    // - -x- - // - -x- -
@@ -414,38 +377,9 @@ public:
 
   std::uint16_t get_report_descriptor_size() override;
   data_type get_report_descriptor() override;
-  data_type request_get_report(std::uint8_t type, std::uint8_t report_id,
-                               std::uint16_t length,
-                               std::uint32_t *p_status) override;
-  void request_set_report(std::uint8_t type, std::uint8_t report_id,
-                          std::uint16_t length, const data_type &data,
+  data_type request_get_report(std::uint8_t type, std::uint8_t report_id, std::uint16_t length, std::uint32_t *p_status) override;
+  void request_set_report(std::uint8_t type, std::uint8_t report_id, std::uint16_t length, const data_type &data,
                           std::uint32_t *p_status) override;
-
-  // ========== 按钮 API ==========
-
-  /// 设置按钮状态（0~15）
-  void set_button(uint8_t index, bool pressed);
-  bool get_button(uint8_t index) const;
-
-  /// 按下一组按钮，其余全部释放
-  void press_buttons(std::initializer_list<uint8_t> indices);
-
-  /// 释放所有按钮
-  void release_all_buttons();
-
-  // ========== D-pad API ==========
-
-  void set_hat(HatDirection dir);
-  HatDirection get_hat() const;
-
-  // ========== 模拟轴 API ==========
-
-  /// 设置轴值（0=X, 1=Y, 2=Z, 3=Rz），范围 AXIS_MIN~AXIS_MAX，中心为 0
-  void set_axis(uint8_t index, int16_t value);
-  int16_t get_axis(uint8_t index) const;
-
-  /// 等待客户端连接
-  bool wait_for_client(int timeout_ms = -1);
 
   bool is_client_connected() const { return client_connected_; }
 
@@ -454,16 +388,10 @@ public:
   uint8_t get_left_rumble() const { return left_rumble_; }
   uint8_t get_right_rumble() const { return right_rumble_; }
   uint32_t get_touch_index() const { return touch_index_; }
-  uint32_t increase_touch_index() { 
-    return ++touch_index_ == std::numeric_limits<uint32_t>::max() ? (touch_index_ = 0) : touch_index_;
-  }
+  uint32_t increase_touch_index() { return ++touch_index_ == std::numeric_limits<uint32_t>::max() ? (touch_index_ = 0) : touch_index_; }
 
 private:
   struct GamepadState {
-    uint16_t buttons = 0;
-    uint8_t hat = static_cast<uint8_t>(HatDirection::Center);
-    std::array<int16_t, NUM_AXES> axes{};
-
     bool operator==(const GamepadState &) const = default;
   };
 

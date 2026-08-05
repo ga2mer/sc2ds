@@ -7,9 +7,9 @@
 
 namespace usbipdcpp {
 
-DualsenseHandler::DualsenseHandler(UsbInterface &handle_interface,
-                                   StringPool &string_pool)
+DualsenseHandler::DualsenseHandler(UsbInterface &handle_interface, StringPool &string_pool)
     : HidVirtualInterfaceHandler(handle_interface, string_pool) {
+  // clang-format off
   report_descriptor_ = {
       0x05, 0x01,       // Usage Page (Generic Desktop Ctrls)
       0x09, 0x05,       // Usage (Game Pad)
@@ -173,74 +173,39 @@ DualsenseHandler::DualsenseHandler(UsbInterface &handle_interface,
                   //   Null Position,Non-volatile)
       0xC0,       // End Collection
   };
+  // clang-format on
 }
 
-void DualsenseHandler::on_new_connection(Session &current_session,
-                                         error_code &ec) {
+void DualsenseHandler::on_new_connection(Session &current_session, error_code &ec) {
   HidVirtualInterfaceHandler::on_new_connection(current_session, ec);
 
   client_connected_ = true;
-  client_connected_.notify_all();
-  client_connect_cv_.notify_all();
-
-  should_stop_ = false;
-  {
-    std::lock_guard lock(state_mutex_);
-    current_state_ = GamepadState{};
-    last_state_ = GamepadState{};
-  }
 }
 
 void DualsenseHandler::on_disconnection(error_code &ec) {
-  should_stop_ = true;
-  // state_cv_.notify_all();
-  // if (send_thread_.joinable())
-  //   send_thread_.join();
   client_connected_ = false;
   HidVirtualInterfaceHandler::on_disconnection(ec);
 }
 
-std::uint16_t DualsenseHandler::get_report_descriptor_size() {
-  return static_cast<std::uint16_t>(report_descriptor_.size());
-}
+std::uint16_t DualsenseHandler::get_report_descriptor_size() { return static_cast<std::uint16_t>(report_descriptor_.size()); }
 
-data_type DualsenseHandler::get_report_descriptor() {
-  return report_descriptor_;
-}
+data_type DualsenseHandler::get_report_descriptor() { return report_descriptor_; }
 
 void DualsenseHandler::on_output_report_received(asio::const_buffer data) {
-    // TODO: types
-    if (data.size() > 0 && static_cast<const uint8_t *>(data.data())[0] == 0x02) {
-        if (data.size() < sizeof(ReportOut02)) {
-            SPDLOG_ERROR("Received SetState report with invalid length: {}", data.size());
-            return;
-        }
-        const ReportOut02 *report = static_cast<const ReportOut02 *>(data.data());
-        left_rumble_ = report->State.RumbleEmulationLeft;
-        right_rumble_ = report->State.RumbleEmulationRight;
+  // TODO: types
+  if (data.size() > 0 && static_cast<const uint8_t *>(data.data())[0] == 0x02) {
+    if (data.size() < sizeof(ReportOut02)) {
+      SPDLOG_ERROR("Received SetState report with invalid length: {}", data.size());
+      return;
     }
+    const ReportOut02 *report = static_cast<const ReportOut02 *>(data.data());
+    left_rumble_ = report->State.RumbleEmulationLeft;
+    right_rumble_ = report->State.RumbleEmulationRight;
+  }
 }
 
-data_type DualsenseHandler::request_get_report(std::uint8_t type,
-                                               std::uint8_t report_id,
-                                               std::uint16_t length,
-                                               std::uint32_t *p_status) {
-  printf("DualsenseHandler::request_get_report(type=%u, report_id=%u, length=%u)\n",
-         type, report_id, length);
-  if (static_cast<HIDReportType>(type) == HIDReportType::Input) {
-    std::lock_guard lock(state_mutex_);
-    data_type result(REPORT_SIZE, 0);
-    result[0] = current_state_.buttons & 0xFF;
-    result[1] = (current_state_.buttons >> 8) & 0xFF;
-    result[2] = current_state_.hat;
-    for (uint8_t i = 0; i < NUM_AXES; ++i) {
-      uint16_t val =
-          static_cast<uint16_t>(static_cast<int16_t>(current_state_.axes[i]));
-      result[3 + i * 2] = val & 0xFF;
-      result[4 + i * 2] = (val >> 8) & 0xFF;
-    }
-    return result;
-  }
+data_type DualsenseHandler::request_get_report(std::uint8_t type, std::uint8_t report_id, std::uint16_t length, std::uint32_t *p_status) {
+  printf("DualsenseHandler::request_get_report(type=%u, report_id=%u, length=%u)\n", type, report_id, length);
   if (static_cast<HIDReportType>(type) == HIDReportType::Feature) {
     if (report_id == 0x09) {
       ReportFeatureInMacAll report{};
@@ -252,15 +217,12 @@ data_type DualsenseHandler::request_get_report(std::uint8_t type,
       report.Hard00 = 0x00;
       uint8_t host_mac_bytes[] = {0x00, 0x1A, 0x7D, 0xDA, 0x71, 0x13};
       memcpy(report.HostMac, host_mac_bytes, 6);
-      return data_type(reinterpret_cast<uint8_t *>(&report),
-                       reinterpret_cast<uint8_t *>(&report) + sizeof(report));
+      return data_type(reinterpret_cast<uint8_t *>(&report), reinterpret_cast<uint8_t *>(&report) + sizeof(report));
     } else if (report_id == 0x20) {
       ReportFeatureInVersion report{};
       report.ReportID = 0x20;
-      strncpy(report.BuildDate, "May 18 2022",
-              sizeof(report.BuildDate));
-      strncpy(report.BuildTime, "09:33:22",
-              sizeof(report.BuildTime));
+      strncpy(report.BuildDate, "May 18 2022", sizeof(report.BuildDate));
+      strncpy(report.BuildTime, "09:33:22", sizeof(report.BuildTime));
       report.FwType = 0x0003;
       report.SwSeries = 0x0004;
       report.HardwareInfo = 0x00000313;
@@ -270,31 +232,29 @@ data_type DualsenseHandler::request_get_report(std::uint8_t type,
       report.FwVersion1 = 0x0001002a;
       report.FwVersion2 = 0x0001000b;
       report.FwVersion3 = 0x00000006;
-      return data_type(reinterpret_cast<uint8_t *>(&report),
-                       reinterpret_cast<uint8_t *>(&report) + sizeof(report));
+      return data_type(reinterpret_cast<uint8_t *>(&report), reinterpret_cast<uint8_t *>(&report) + sizeof(report));
     } else if (report_id == 0x05) {
       ReportFeatureInCalibrateBT report{};
       report.ReportID = 0x05;
-      // report.GyroPitchBias = 0xffff;
-      // report.GyroYawBias = 0xfffe;
-      // report.GyroRollBias = 0x0007;
-      // report.GyroPitchPlus = 0x22a5;
-      // report.GyroPitchMinus = 0xdd59;
-      // report.GyroYawPlus = 0x229e;
-      // report.GyroYawMinus = 0xdd5e;
-      // report.GyroRollPlus = 0x22aa;
-      // report.GyroRollMinus = 0xdd64;
-      // report.GyroSpeedPlus = 0x021c;
-      // report.GyroSpeedMinus = 0x021c;
-      // report.AccelXPlus = 0x1fe3;
-      // report.AccelXMinus = 0xdfeb;
-      // report.AccelYPlus = 0x1fd2;
-      // report.AccelYMinus = 0xdfd8;
-      // report.AccelZPlus = 0x2002;
-      // report.AccelZMinus = 0x2002;
-      // report.Unknown = 0x0007;
-      return data_type(reinterpret_cast<uint8_t *>(&report),
-                       reinterpret_cast<uint8_t *>(&report) + sizeof(report));
+      report.GyroPitchBias = 0xffff;
+      report.GyroYawBias = 0xfffe;
+      report.GyroRollBias = 0x0007;
+      report.GyroPitchPlus = 0x22a5;
+      report.GyroPitchMinus = 0xdd59;
+      report.GyroYawPlus = 0x229e;
+      report.GyroYawMinus = 0xdd5e;
+      report.GyroRollPlus = 0x22aa;
+      report.GyroRollMinus = 0xdd64;
+      report.GyroSpeedPlus = 0x021c;
+      report.GyroSpeedMinus = 0x021c;
+      report.AccelXPlus = 0x1fe3;
+      report.AccelXMinus = 0xdfeb;
+      report.AccelYPlus = 0x1fd2;
+      report.AccelYMinus = 0xdfd8;
+      report.AccelZPlus = 0x2002;
+      report.AccelZMinus = 0xdffb;
+      report.Unknown = 0x0007;
+      return data_type(reinterpret_cast<uint8_t *>(&report), reinterpret_cast<uint8_t *>(&report) + sizeof(report));
     } else {
       SPDLOG_ERROR("Unsupported feature report ID: {}", report_id);
     }
@@ -305,101 +265,14 @@ data_type DualsenseHandler::request_get_report(std::uint8_t type,
   return {};
 }
 
-void DualsenseHandler::request_set_report(std::uint8_t type, std::uint8_t report_id,
-                                                               std::uint16_t length, const data_type &data,
-                                                               std::uint32_t *p_status) {
-    if (type == 0x03 && report_id == 0x08) {
-      *p_status = 0;
-      return;
-    }
-    SPDLOG_WARN("unhandled request_set_report (type={}, report_id={}, length={})", type, report_id, length);
-    HidVirtualInterfaceHandler::request_set_report(type, report_id, length, data, p_status);
-}
-
-// ========== 按钮 API ==========
-
-void DualsenseHandler::set_button(uint8_t index, bool pressed) {
-  if (index >= NUM_BUTTONS)
+void DualsenseHandler::request_set_report(std::uint8_t type, std::uint8_t report_id, std::uint16_t length, const data_type &data,
+                                          std::uint32_t *p_status) {
+  if (type == 0x03 && report_id == 0x08) {
+    *p_status = 0;
     return;
-  std::lock_guard lock(state_mutex_);
-  uint16_t old = current_state_.buttons;
-  if (pressed)
-    current_state_.buttons |= (1u << index);
-  else
-    current_state_.buttons &= ~(1u << index);
-  if (current_state_.buttons != old)
-    state_cv_.notify_one();
-}
-
-bool DualsenseHandler::get_button(uint8_t index) const {
-  if (index >= NUM_BUTTONS)
-    return false;
-  std::lock_guard lock(state_mutex_);
-  return (current_state_.buttons >> index) & 1;
-}
-
-void DualsenseHandler::press_buttons(std::initializer_list<uint8_t> indices) {
-  std::lock_guard lock(state_mutex_);
-  current_state_.buttons = 0;
-  for (auto idx : indices) {
-    if (idx < NUM_BUTTONS)
-      current_state_.buttons |= (1u << idx);
   }
-  state_cv_.notify_one();
-}
-
-void DualsenseHandler::release_all_buttons() {
-  std::lock_guard lock(state_mutex_);
-  if (current_state_.buttons != 0) {
-    current_state_.buttons = 0;
-    state_cv_.notify_one();
-  }
-}
-
-// ========== D-pad API ==========
-
-void DualsenseHandler::set_hat(HatDirection dir) {
-  std::lock_guard lock(state_mutex_);
-  uint8_t val = static_cast<uint8_t>(dir);
-  if (current_state_.hat != val) {
-    current_state_.hat = val;
-    state_cv_.notify_one();
-  }
-}
-
-DualsenseHandler::HatDirection DualsenseHandler::get_hat() const {
-  std::lock_guard lock(state_mutex_);
-  return static_cast<HatDirection>(current_state_.hat);
-}
-
-// ========== 模拟轴 API ==========
-
-void DualsenseHandler::set_axis(uint8_t index, int16_t value) {
-  if (index >= NUM_AXES)
-    return;
-  std::lock_guard lock(state_mutex_);
-  if (current_state_.axes[index] != value) {
-    current_state_.axes[index] = value;
-    state_cv_.notify_one();
-  }
-}
-
-int16_t DualsenseHandler::get_axis(uint8_t index) const {
-  if (index >= NUM_AXES)
-    return 0;
-  std::lock_guard lock(state_mutex_);
-  return current_state_.axes[index];
-}
-
-bool DualsenseHandler::wait_for_client(int timeout_ms) {
-  if (timeout_ms < 0) {
-    client_connected_.wait(false);
-    return true;
-  }
-  std::unique_lock lock(client_connect_mutex_);
-  return client_connect_cv_.wait_for(
-      lock, std::chrono::milliseconds(timeout_ms),
-      [this] { return client_connected_.load(); });
+  SPDLOG_WARN("unhandled request_set_report (type={}, report_id={}, length={})", type, report_id, length);
+  HidVirtualInterfaceHandler::request_set_report(type, report_id, length, data, p_status);
 }
 
 } // namespace usbipdcpp

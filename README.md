@@ -2,7 +2,7 @@
 
 Steam Controller (2026) to DualSense emulation with audio haptics support
 
-It uses `usbip` protocol to simulate as USB Composite device that open HID + USB Audio Class 1 device which allows to be detected by Proton as DualSense gamepad + speaker/haptics
+It uses `usbip` protocol to simulate as USB Composite device that open HID + USB Audio Class 1 interfaces which allows to be detected by Proton as DualSense gamepad + speaker/haptics
 
 ## Requirements
 - Linux with `usbip` module
@@ -38,7 +38,7 @@ For proper work, it seems it should be configured as an audio device with 4 chan
 
 ## Issues
 - very unstable since it using `usbip` protocol, so it emulates usb protocol
-- sound may crackle occasionally since ^ and for Puck it uses 4000 Hz 8-bit mulaw playback + resampling and high/lowsampling algorithms may be not very good
+- sound may crackle occasionally since ^ and for Puck it uses 4000 Hz 8-bit mulaw playback + resampling and high/lowpassing algorithms may be not very good
 - spams in dmesg with `Not yet implemented` `vhci_get_frame_number` callback errors, it doesn't seem to affect anything, but I don't think [there's a way to turn it off](https://github.com/torvalds/linux/blob/3b5f4b83c4abc0c9b0a7b9e2b44e816611b7f2ec/drivers/usb/usbip/vhci_hcd.c#L1277)
 - code is very bad and random
 - tested only in single game (Cronos) and KDE Plasma audio output
