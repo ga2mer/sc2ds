@@ -149,25 +149,25 @@ public:
     uint32_t num_frames = bytes / (channels() * sizeof(int16_t));
     for (uint32_t f = 0; f < num_frames; f++) {
       int idx = f * channels();
+      int16_t fr_high = filter_fr_high.process(reinterpret_cast<const int16_t *>(buffer)[idx + 1]);
+      int16_t rl_filtered = filter_rl.process(reinterpret_cast<const int16_t *>(buffer)[idx + 2]);
+      int16_t rr_filtered = filter_rr.process(reinterpret_cast<const int16_t *>(buffer)[idx + 3]);
+
+      int32_t rl_mixed = static_cast<int32_t>(rl_filtered) + static_cast<int32_t>(fr_high);
+      int32_t rr_mixed = static_cast<int32_t>(rr_filtered) + static_cast<int32_t>(fr_high);
+
+      if (rl_mixed > 32767)
+        rl_mixed = 32767;
+      if (rl_mixed < -32768)
+        rl_mixed = -32768;
+      if (rr_mixed > 32767)
+        rr_mixed = 32767;
+      if (rr_mixed < -32768)
+        rr_mixed = -32768;
+
+      int16_t rl_new = static_cast<int16_t>(rl_mixed);
+      int16_t rr_new = static_cast<int16_t>(rr_mixed);
       if (f % 12 == 0) { // resampling, 48000/4000
-        int16_t fr_high = filter_fr_high.process(reinterpret_cast<const int16_t *>(buffer)[idx + 1]);
-        int16_t rl_filtered = filter_rl.process(reinterpret_cast<const int16_t *>(buffer)[idx + 2]);
-        int16_t rr_filtered = filter_rr.process(reinterpret_cast<const int16_t *>(buffer)[idx + 3]);
-
-        int32_t rl_mixed = static_cast<int32_t>(rl_filtered) + static_cast<int32_t>(fr_high);
-        int32_t rr_mixed = static_cast<int32_t>(rr_filtered) + static_cast<int32_t>(fr_high);
-
-        if (rl_mixed > 32767)
-          rl_mixed = 32767;
-        if (rl_mixed < -32768)
-          rl_mixed = -32768;
-        if (rr_mixed > 32767)
-          rr_mixed = 32767;
-        if (rr_mixed < -32768)
-          rr_mixed = -32768;
-
-        int16_t rl_new = static_cast<int16_t>(rl_mixed);
-        int16_t rr_new = static_cast<int16_t>(rr_mixed);
         temp_accumulator.push_back(LinearToMuLawSample(rl_new));
         temp_accumulator.push_back(LinearToMuLawSample(rr_new));
         if (temp_accumulator.size() >= TARGET_CHUNK_BYTES) {
