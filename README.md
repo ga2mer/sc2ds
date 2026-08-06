@@ -42,7 +42,6 @@ For proper work, it seems it should be configured as an audio device with 4 chan
 - spams in dmesg with `Not yet implemented` `vhci_get_frame_number` callback errors, it doesn't seem to affect anything, but I don't think [there's a way to turn it off](https://github.com/torvalds/linux/blob/3b5f4b83c4abc0c9b0a7b9e2b44e816611b7f2ec/drivers/usb/usbip/vhci_hcd.c#L1277)
 - code is very bad and random
 - tested only in single game (Cronos) and KDE Plasma audio output
-- doesn't support hot plugging yet
 - doesn't support Windows (yet) because I don't use it and probably `usbip-win` is not ready for it (idk)
 
 ## Thanks

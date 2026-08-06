@@ -23,6 +23,17 @@ size_t bytes_per_sample = 2; // 16-bit
 
 using namespace usbipdcpp;
 
+class SteamController;
+
+static Server server;
+static SteamController *g_sController = nullptr;
+std::atomic<bool> running{true};
+std::atomic<bool> started{false};
+std::thread worker_thread;
+DualsenseHandler *g_dh = nullptr;
+DualsenseHandler::ReportIn report{0x1, {}};
+std::atomic<bool> report_is_ready{false};
+
 struct LowpassFilter {
   double prev_out = 0.0;
   double alpha = 0.0;
@@ -405,6 +416,18 @@ public:
           if (transfer->buffer[2] & STREAM_STATUS_NEEDS_MORE_DATA) {
             haptic_skip_ = false;
           }
+        } else if (transfer->buffer[0] == ID_TRITON_WIRELESS_STATUS) {
+          if (transfer->buffer[1] == 0x02) {
+          } else if (transfer->buffer[1] == 0x01) {
+            stop();
+            // todo: reset whole state to default value
+            report.State.ButtonHome = 0;
+            if (g_dh->is_client_connected()) {
+              g_dh->send_input_report(asio::buffer(&report, sizeof(report)));
+            }
+            search_working_interface_ = true;
+            return;
+          }
         }
       }
     } else {
@@ -484,9 +507,14 @@ public:
   void stop() {
     if (read_transfer)
       libusb_cancel_transfer(read_transfer);
+    main_interface = -1;
+    in_endpoint = -1;
+    out_endpoint = -1;
   }
   void clear() {
     stop();
+    search_working_interface_ = false;
+    claiming_interfaces_ = false;
     if (usb_handle) {
       for (const auto &[interface_number, sc_interface] : interfaces) {
         libusb_release_interface(usb_handle, interface_number);
@@ -501,12 +529,6 @@ public:
     }
   }
 };
-static Server server;
-static SteamController *g_sController = nullptr;
-std::atomic<bool> running{true};
-std::atomic<bool> started{false};
-std::thread worker_thread;
-DualsenseHandler *g_dh = nullptr;
 
 void signal_handler(int signal) {
   running = false;
@@ -523,12 +545,12 @@ void signal_handler(int signal) {
   exit(signal);
 }
 
-DualsenseHandler::ReportIn report{0x1, {}};
-std::atomic<bool> report_is_ready{false};
+
 void translate_to_dualsense_report() {
   auto &state = report.State;
   const auto &triton_report = g_sController->get_controller_state();
   const auto &battery_report = g_sController->get_battery_state();
+  // does it good idea to send battery data if we emulate wired device?
   if (g_sController->battery_report_is_ready()) {
     state.powerState = TritonToDualsensePowerState(static_cast<EChargeState>(g_sController->get_battery_state().ucChargeState));
     state.PowerPercent = RoundPowerLevel(g_sController->get_battery_state().ucBatteryLevel);
