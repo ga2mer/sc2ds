@@ -37,7 +37,6 @@ struct LowpassFilter {
     double current_in = static_cast<double>(sample);
     prev_out = prev_out + alpha * (current_in - prev_out);
 
-    // Ограничиваем результат диапазоном int16_t и округляем
     if (prev_out > 32767.0)
       prev_out = 32767.0;
     if (prev_out < -32768.0)
@@ -150,7 +149,7 @@ public:
     uint32_t num_frames = bytes / (channels() * sizeof(int16_t));
     for (uint32_t f = 0; f < num_frames; f++) {
       int idx = f * channels();
-      if (f % 12 == 0) {
+      if (f % 12 == 0) { // resampling, 48000/4000
         int16_t fr_high = filter_fr_high.process(reinterpret_cast<const int16_t *>(buffer)[idx + 1]);
         int16_t rl_filtered = filter_rl.process(reinterpret_cast<const int16_t *>(buffer)[idx + 2]);
         int16_t rr_filtered = filter_rr.process(reinterpret_cast<const int16_t *>(buffer)[idx + 3]);
@@ -399,14 +398,12 @@ public:
         } else if (transfer->buffer[0] == ID_TRITON_BATTERY_STATUS) {
           std::memcpy(&battery_state, transfer->buffer + 1, sizeof(battery_state));
           battery_report_is_ready_ = true;
-        } else {
-          if (transfer->buffer[0] == 0x44) {
-            if (transfer->buffer[2] == 0x08) {
-              haptic_skip_ = true;
-            }
-            if (transfer->buffer[2] == 0x04) {
-              haptic_skip_ = false;
-            }
+        } else if (transfer->buffer[0] == ID_TRITON_HAPTIC_STREAM_STATUS_STATE) {
+          if (transfer->buffer[2] & STREAM_STATUS_HAS_ENOUGH_DATA) {
+            haptic_skip_ = true;
+          }
+          if (transfer->buffer[2] & STREAM_STATUS_NEEDS_MORE_DATA) {
+            haptic_skip_ = false;
           }
         }
       }
@@ -431,7 +428,8 @@ public:
       spdlog::error("Haptic data too large: {}", haptic_data.size());
       return;
     }
-    if (haptic_skip_) return;
+    if (haptic_skip_)
+      return;
     MsgHapticPCMStereo msg{};
     msg.report_id = 0x88;
     msg.length = haptic_data.size() / 2;
@@ -442,8 +440,6 @@ public:
     send_data(reinterpret_cast<unsigned char *>(&msg), sizeof(msg));
   }
   void send_rumble(uint8_t left, uint8_t right) {
-    if (!usb_handle)
-      return;
     MsgHapticRumble msg{};
     msg.report_id = 0x80;
     msg.left.speed = (uint16_t)left * 257;
@@ -786,7 +782,8 @@ int main() {
         if (!current_packet.empty()) {
           g_sController->send_audio_haptic(current_packet);
         }
-      } else if (g_sController->claiming_interfaces()) {
+      }
+      if (g_sController->claiming_interfaces()) {
         if (!g_sController->claim_interface()) {
           spdlog::error("Failed to claim Steam Controller interface, close all other "
                         "applications that may be using, try again in 1 second");
