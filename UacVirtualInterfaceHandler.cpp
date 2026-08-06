@@ -265,6 +265,7 @@ UacAudioStreamingHandler::UacAudioStreamingHandler(UsbInterface &handle_interfac
                 if (sink_) {
                     sink_->write_audio(&data[iso.offset], iso.length);
                 }
+                iso.actual_length = iso.length;
                 // total_sent += iso.length;
             }
 
@@ -274,7 +275,6 @@ UacAudioStreamingHandler::UacAudioStreamingHandler(UsbInterface &handle_interfac
             }
 
             auto received_size = static_cast<std::uint32_t>(trx->data.size());
-            // if (!streaming_) continue;
             if (std::find(unlinked_seqnums_.begin(), unlinked_seqnums_.end(), resp.seqnum) != unlinked_seqnums_.end()) {
                 unlinked_seqnums_.erase(std::remove(unlinked_seqnums_.begin(), unlinked_seqnums_.end(), resp.seqnum), unlinked_seqnums_.end());
                 spdlog::info("UAC: Skipping sending audio data for seqnum {} as it has been unlinked.", resp.seqnum);
@@ -282,8 +282,10 @@ UacAudioStreamingHandler::UacAudioStreamingHandler(UsbInterface &handle_interfac
                 //     UsbIpResponse::UsbIpRetSubmit::create_ret_submit_epipe_without_data(resp.seqnum, 0));
                 continue;
             }
-            session->submit_ret_submit(
-                    UsbIpResponse::UsbIpRetSubmit::create_ret_submit_ok_without_data(resp.seqnum, received_size));
+            if (!streaming_) continue;
+            session->submit_ret_submit(UsbIpResponse::UsbIpRetSubmit::create_ret_submit(
+                resp.seqnum, static_cast<std::uint16_t>(UrbStatusType::StatusOK), received_size, 0,
+                static_cast<std::uint16_t>(iso_descs.size()), std::move(resp.transfer)));
         }
     });
 }
